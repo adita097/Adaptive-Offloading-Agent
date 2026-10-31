@@ -31,10 +31,14 @@ class RuleBasedDecisionExplainer:
             )
 
         # 2. Executive Summary
+        adv = ""
+        if decision.baseline_benchmark and decision.baseline_benchmark.overall_advantage:
+            adv = f" Benchmark Advantage: {decision.baseline_benchmark.overall_advantage}."
+
         exec_summary = (
             f"The optimization engine selected {winner.value} using the {decision.strategy.value} strategy. "
             f"Under current network conditions, {winner.value} achieved the optimal trade-off with a composite "
-            f"cost score of {decision.composite_cost_score:.3f}, consuming {decision.device_energy_j:.3f}J of device energy."
+            f"cost score of {decision.composite_cost_score:.3f}, consuming {decision.device_energy_j:.3f}J of device energy.{adv}"
         )
 
         # 3. Why Winner Won

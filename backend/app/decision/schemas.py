@@ -25,6 +25,26 @@ class TradeOffAnalysis(BaseModel):
     summary: str = Field(description="Concise description of the trade-off")
 
 
+class BaselineMetric(BaseModel):
+    """Comparative performance of a static baseline vs the agent's optimal decision."""
+    baseline_name: str = Field(description="Display label e.g., 'Local-Only', 'Cloud-Only'")
+    tier: TierType
+    latency_ms: float
+    energy_j: float
+    is_feasible: bool
+    latency_savings_ms: float = Field(description="Baseline latency minus agent latency. Positive = agent is faster.")
+    energy_savings_j: float = Field(description="Baseline energy minus agent energy. Positive = agent saves battery.")
+    speedup_ratio: float = Field(description="Baseline latency / Agent latency")
+    summary: str
+
+
+class BaselineBenchmarkReport(BaseModel):
+    """Evaluation of the agent's decision against traditional static offloading policies."""
+    agent_tier: TierType
+    baselines: Dict[str, BaselineMetric]
+    overall_advantage: str
+
+
 class OffloadingDecisionRecord(BaseModel):
     """
     Final algorithmic offloading decision output produced by Stage 5.
@@ -49,6 +69,7 @@ class OffloadingDecisionRecord(BaseModel):
     candidate_evaluations: Dict[TierType, TierCostMetrics]
     trade_off: TradeOffAnalysis
     all_feasible_tiers: List[TierType]
+    baseline_benchmark: Optional[BaselineBenchmarkReport] = None
     
     # Audit trail for explainability in Stage 6
     decision_reason_code: str = Field(description="Algorithmic rationale code, e.g., BEST_COMPOSITE_SCORE, DEADLINE_ENFORCED_FALLBACK")

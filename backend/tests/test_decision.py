@@ -113,3 +113,29 @@ def test_decision_service_feedback_and_audit():
     stats = service.get_tier_distribution_stats()
     assert stats["total_decisions"] == 1
     assert decision.selected_tier.value in stats["counts"]
+
+
+def test_comparative_baseline_benchmark():
+    env = EnvironmentManager("NOMINAL_5G")
+    task = TaskProfile(
+        task_id="BENCHMARK_TEST_01",
+        workload_gigaflops=1.2,
+        input_data_size_mb=2.5,
+        deadline_ms=600.0
+    )
+    eval_report = CostEngine.evaluate_task(task, env.get_current_state())
+    decision = DecisionSelector.select_optimal_tier(eval_report)
+
+    bench = decision.baseline_benchmark
+    assert bench is not None
+    assert bench.agent_tier == decision.selected_tier
+    assert "LOCAL_ONLY" in bench.baselines
+    assert "EDGE_ONLY" in bench.baselines
+    assert "CLOUD_ONLY" in bench.baselines
+
+    loc_metric = bench.baselines["LOCAL_ONLY"]
+    assert loc_metric.baseline_name == "Local-Only (On-Device)"
+    assert loc_metric.tier == TierType.LOCAL
+    assert loc_metric.speedup_ratio >= 0.0
+    assert len(bench.overall_advantage) > 0
+

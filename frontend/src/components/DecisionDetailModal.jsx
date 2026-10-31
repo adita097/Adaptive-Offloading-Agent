@@ -170,6 +170,54 @@ export default function DecisionDetailModal({ decision, explanation, onClose }) 
           </div>
         )}
 
+        {/* Comparative Baseline Benchmark */}
+        {decision.baseline_benchmark && (
+          <div style={{
+            backgroundColor: 'var(--bg-tertiary)',
+            border: '1px solid var(--border-color)',
+            borderRadius: 'var(--radius-md)',
+            padding: '12px 14px',
+            marginBottom: '16px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '6px' }}>
+              <span style={{ fontSize: '0.6875rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Baseline Comparison vs Static Policies
+              </span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--accent-primary)', fontWeight: 600 }}>
+                {decision.baseline_benchmark.overall_advantage}
+              </span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '8px' }}>
+              {Object.entries(decision.baseline_benchmark.baselines || {}).map(([key, b]) => {
+                const isSelected = decision.selected_tier === b.tier;
+                return (
+                  <div key={key} style={{
+                    backgroundColor: '#FFFFFF',
+                    border: isSelected ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                    padding: '8px 10px',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '0.75rem',
+                  }}>
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '3px' }}>
+                      {b.baseline_name}
+                    </div>
+                    <div className="mono" style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+                      Latency: {b.latency_ms?.toFixed(1)} ms
+                    </div>
+                    <div className="mono" style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+                      Energy: {b.energy_j?.toFixed(4)} J
+                    </div>
+                    <div style={{ fontSize: '0.6875rem', color: isSelected ? 'var(--accent-primary)' : (b.latency_savings_ms > 0 ? 'var(--status-success)' : 'var(--text-secondary)'), fontWeight: 500, marginTop: '3px' }}>
+                      {isSelected ? '✓ Optimal Choice' : (b.latency_savings_ms > 0 ? `+${b.latency_savings_ms.toFixed(0)}ms faster` : `${Math.abs(b.latency_savings_ms).toFixed(0)}ms slower`)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Candidate Tier Evaluations & Rejection Reasons */}
         {decision.candidate_evaluations && (
           <div>

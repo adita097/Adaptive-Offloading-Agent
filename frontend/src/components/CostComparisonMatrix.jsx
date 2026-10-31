@@ -3,7 +3,14 @@ import {
   CheckCircle2, 
   XCircle, 
   Award,
-  Layers
+  Layers,
+  TrendingUp,
+  Zap,
+  Smartphone,
+  Cloud,
+  Radio,
+  Clock,
+  Battery
 } from 'lucide-react';
 
 export default function CostComparisonMatrix({ costEvaluation, latestDecision }) {
@@ -22,6 +29,33 @@ export default function CostComparisonMatrix({ costEvaluation, latestDecision })
 
   const allTiers = Object.values(tier_evaluations);
   const maxEnergy = Math.max(...allTiers.map((t) => t.device_total_energy_j), 0.001);
+
+  // Baseline Comparison Metrics Data (from decision record or computed from tier evaluations)
+  const winnerMetric = tier_evaluations[winnerTier] || allTiers[0];
+
+  const baselinesList = [
+    {
+      key: 'LOCAL_ONLY',
+      name: 'Local-Only (On-Device)',
+      tier: 'LOCAL',
+      icon: Smartphone,
+      metric: tier_evaluations.LOCAL,
+    },
+    {
+      key: 'EDGE_ONLY',
+      name: 'Edge-Only (MEC 5G)',
+      tier: 'EDGE',
+      icon: Radio,
+      metric: tier_evaluations.EDGE,
+    },
+    {
+      key: 'CLOUD_ONLY',
+      name: 'Cloud-Only (Hyperscale Cloud)',
+      tier: 'CLOUD',
+      icon: Cloud,
+      metric: tier_evaluations.CLOUD,
+    },
+  ];
 
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -55,6 +89,120 @@ export default function CostComparisonMatrix({ costEvaluation, latestDecision })
             <span style={{ color: 'var(--border-hover)', margin: '0 4px' }}>|</span>
             <span className="mono" style={{ fontWeight: 600, color: 'var(--status-success)' }}>&beta;={beta_energy_weight}</span>
           </div>
+        </div>
+      </div>
+
+      {/* Comparative Baseline Benchmark Section */}
+      <div className="card" style={{ padding: '18px 20px', backgroundColor: '#FFFFFF' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <TrendingUp size={16} color="var(--accent-primary)" />
+            <h3 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+              Comparative Baseline Benchmark — Agent Savings vs. Static Policies
+            </h3>
+          </div>
+          <span className="badge badge-accent" style={{ fontSize: '0.72rem' }}>
+            Optimal Decision: {winnerTier}
+          </span>
+        </div>
+
+        {/* Advantage Callout Banner */}
+        <div style={{
+          backgroundColor: 'var(--accent-subtle)',
+          border: '1px solid var(--accent-subtle-border)',
+          borderRadius: 'var(--radius-md)',
+          padding: '10px 14px',
+          marginBottom: '14px',
+          fontSize: '0.8rem',
+          color: 'var(--text-primary)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+        }}>
+          <Zap size={14} color="var(--accent-primary)" style={{ flexShrink: 0 }} />
+          <span>
+            <strong>Adaptive Advantage: </strong>
+            {latestDecision?.baseline_benchmark?.overall_advantage || 
+              (winnerTier === 'LOCAL' 
+                ? 'Local execution avoids network transmission delay and backhaul bandwidth overhead.' 
+                : 'Offloading relieves local SoC constraints, saving device battery and accelerating processing.')}
+          </span>
+        </div>
+
+        {/* 3 Comparative Cards */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gap: '12px',
+        }}>
+          {baselinesList.map((b) => {
+            if (!b.metric) return null;
+            const Icon = b.icon;
+            const latDiff = Number((b.metric.total_latency_ms - winnerMetric.total_latency_ms).toFixed(1));
+            const engDiff = Number((b.metric.device_total_energy_j - winnerMetric.device_total_energy_j).toFixed(4));
+            const isMatch = winnerTier === b.tier;
+
+            return (
+              <div
+                key={b.key}
+                style={{
+                  backgroundColor: 'var(--bg-tertiary)',
+                  border: isMatch ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '12px 14px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Icon size={14} color={isMatch ? 'var(--accent-primary)' : 'var(--text-secondary)'} />
+                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                      {b.name}
+                    </span>
+                  </div>
+                  <span className={`badge ${b.metric.is_feasible ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '0.65rem' }}>
+                    {b.metric.is_feasible ? 'QoS Met' : 'Deadline Violated'}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>Latency vs Agent:</span>
+                  <span className="mono" style={{
+                    fontWeight: 600,
+                    color: isMatch ? 'var(--text-secondary)' : (latDiff > 0 ? 'var(--status-success)' : 'var(--status-error)'),
+                  }}>
+                    {isMatch ? '0.0 ms (Optimal)' : (latDiff > 0 ? `+${latDiff} ms faster` : `${latDiff} ms slower`)}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>Device Energy vs Agent:</span>
+                  <span className="mono" style={{
+                    fontWeight: 600,
+                    color: isMatch ? 'var(--text-secondary)' : (engDiff > 0 ? 'var(--status-success)' : 'var(--status-error)'),
+                  }}>
+                    {isMatch ? '0.0000 J (Optimal)' : (engDiff > 0 ? `+${engDiff} J saved` : `${engDiff} J more`)}
+                  </span>
+                </div>
+
+                <div style={{
+                  paddingTop: '6px',
+                  borderTop: '1px solid var(--border-color)',
+                  fontSize: '0.7rem',
+                  color: isMatch ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                  fontWeight: isMatch ? 600 : 400,
+                }}>
+                  {isMatch ? '✓ Agent policy matched this optimal tier.' : (
+                    latDiff > 0 && engDiff > 0 
+                      ? 'Agent outperformed on both latency and battery energy.' 
+                      : (latDiff > 0 ? 'Agent achieved lower latency.' : 'Agent achieved lower battery consumption.')
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
