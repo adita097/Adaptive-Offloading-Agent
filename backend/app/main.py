@@ -3,6 +3,11 @@ Adaptive Offloading Agent - Master FastAPI Application Entrypoint.
 Exposes RESTful endpoints and real-time WebSockets for edge/fog/cloud routing.
 """
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load local environment variables from .env file
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
