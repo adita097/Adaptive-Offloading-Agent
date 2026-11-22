@@ -1,16 +1,6 @@
 # Adaptive Offloading Agent: Real-Time Edge/Fog/Cloud Routing with LangGraph
 
-**B.Tech IT 7th Semester — Minor Project**  
-**Subject Code:** ITUGPV1  
-
-- **Team Members:**
-  - Adita Singh (23036102)
-  - Gavidi Deepashikha (23036120)
-- **Project Mentor:** Dr. Ankit Kumar
-
 ---
-
-## 📌 Abstract
 
 Modern IoT and mobile applications continuously generate computationally intensive workloads (such as image analysis, sensor processing, and real-time analytics) that can exceed the processing and battery capabilities of end devices. While executing tasks locally can deplete battery rapidly, offloading everything to a distant cloud introduces substantial network latency and bandwidth costs.
 
